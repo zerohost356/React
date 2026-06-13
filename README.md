@@ -2,15 +2,15 @@
 
 <div align="center">
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/tempmail)
-
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Build](https://img.shields.io/badge/build-passing-22c55e?style=flat-square)
 
-**A free disposable email service — generate random or custom email addresses to receive mail without creating an account.**
+**Free disposable email — generate random or custom addresses and receive mail instantly, no signup required.**
+
+🌐 **Live:** [tempmail-gpt.onrender.com](https://tempmail-gpt.onrender.com)
 
 </div>
 
@@ -18,13 +18,14 @@
 
 ## Features
 
-- Generate random or custom email addresses with available domains
-- **Real-time** inbox updates via Server-Sent Events (SSE)
-- Desktop notifications for new incoming emails
-- View emails in HTML or plain text format
-- Address history saved across sessions
-- Global usage statistics (emails received in the last 24h)
-- One-click inbox cleanup
+- Generate random or custom temporary email addresses
+- **Real-time** inbox via Server-Sent Events (SSE) with auto-polling fallback
+- Desktop push notifications for new emails
+- View emails in HTML or plain text
+- Address history saved in browser (up to 8 recent addresses)
+- Live global statistics (emails in last 24h, active domains)
+- One-click inbox clear
+- 1,200+ available domains
 
 ## Tech Stack
 
@@ -49,98 +50,60 @@
 ```bash
 # 1. Clone the repository
 git clone https://github.com/zerohost356/TempMail.git
-cd tempmail
+cd TempMail
 
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment variables (optional)
-cp .env.example .env.local
-
-# 4. Start the development server
+# 3. Start the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:5000](http://localhost:5000) in your browser.
 
-### Available Scripts
+### Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Create production build |
-| `npm run start` | Start production server |
+| `npm run dev` | Development server on port 5000 |
+| `npm run build` | Production build |
+| `npm run start` | Production server on port 5000 |
 | `npm run lint` | Run ESLint |
-
----
-
-## Environment Variables
-
-Create a `.env.local` file from the example:
-
-```bash
-cp .env.example .env.local
-```
-
-```env
-# Port the server listens on (default: 3000)
-PORT=3000
-
-# Disable Next.js telemetry (optional)
-NEXT_TELEMETRY_DISABLED=1
-```
-
-> No API keys or tokens are required — the app automatically manages sessions with the upstream service.
 
 ---
 
 ## Deployment
 
-### Deploy to Vercel (Recommended)
+### Deploy to Render
 
-Click the button below to deploy instantly:
+1. Fork or push this repo to GitHub
+2. Go to [render.com](https://render.com) → **New Web Service**
+3. Connect your GitHub repo (`zerohost356/React`)
+4. Use these settings:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/tempmail)
+| Setting | Value |
+|---------|-------|
+| **Build Command** | `npm install && npm run build` |
+| **Start Command** | `npm run start` |
+| **Environment** | `NODE_ENV=production` |
 
-**Manual steps:**
+Render will auto-detect `render.yaml` and apply the correct configuration.
 
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com) → **Add New Project**
-3. Import your GitHub repository
-4. Vercel auto-detects Next.js — click **Deploy**
+### render.yaml
 
-### Deploy via Vercel CLI
-
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Login
-vercel login
-
-# Deploy to preview
-vercel
-
-# Deploy to production
-vercel --prod
+```yaml
+services:
+  - type: web
+    name: tempmail
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
 ```
 
-### Environment Variables on Vercel
-
-Go to **Project Settings → Environment Variables** and add:
-
-| Key | Value | Environment |
-|-----|-------|-------------|
-| `NEXT_TELEMETRY_DISABLED` | `1` | Production, Preview, Development |
-
-> `PORT` is not required on Vercel — it is managed automatically.
-
-### ⚠️ SSE Timeout Notice
-
-The real-time inbox feature (`/api/stream`) uses long-lived SSE connections. Vercel Serverless Functions have a **30-second timeout** on the free plan. If you need longer SSE connections, consider:
-
-- Upgrading to **Vercel Pro** (up to 300s timeout)
-- Switching to **polling** as an alternative to SSE
+> No API keys required — the app auto-manages upstream sessions.
 
 ---
 
@@ -151,10 +114,10 @@ The real-time inbox feature (`/api/stream`) uses long-lived SSE connections. Ver
 | `GET` | `/api/domains` | List available email domains |
 | `GET` | `/api/generator-email` | Generate a random email address |
 | `GET` | `/api/custom-email?username=&domain=` | Generate a custom email address |
-| `GET` | `/api/inbox?inbox=` | Fetch emails in an inbox |
-| `GET` | `/api/email/[id]?inbox=` | Get a specific email's content |
+| `GET` | `/api/inbox?inbox=` | Fetch emails for an inbox |
+| `GET` | `/api/email/[id]?inbox=` | Get a specific email's full content |
 | `DELETE` | `/api/clear?inbox=` | Delete all emails in an inbox |
-| `GET` | `/api/stats` | Get global usage statistics |
+| `GET` | `/api/stats` | Global usage statistics |
 | `GET` | `/api/stream?inbox=` | SSE stream for real-time updates |
 
 ---
@@ -163,23 +126,24 @@ The real-time inbox feature (`/api/stream`) uses long-lived SSE connections. Ver
 
 ```
 ├── components/
-│   └── Layout.tsx         # Shared layout (header, navigation)
+│   └── Layout.tsx          # Shared layout (header, navigation)
 ├── lib/
-│   ├── tempmail.ts        # Upstream service integration
-│   └── cookies.ts         # Cookie management utilities
+│   ├── tempmail.ts         # Upstream service integration & auth
+│   └── cookies.ts          # Cookie helpers
 ├── pages/
-│   ├── index.tsx          # Main application page
-│   ├── docs.tsx           # Documentation page
-│   ├── statistics.tsx     # Statistics page
-│   ├── domains.tsx        # Available domains page
-│   └── api/               # API route handlers
-├── public/                # Static assets (icons, manifest)
-├── styles/                # Global CSS
-└── scripts/               # API testing scripts
+│   ├── index.tsx           # Inbox & email generator
+│   ├── docs.tsx            # API documentation
+│   ├── statistics.tsx      # Live statistics
+│   ├── domains.tsx         # Available domains
+│   └── api/                # API route handlers
+├── public/                 # Static assets (icons, manifest)
+├── styles/                 # Global CSS (Tailwind v4)
+├── render.yaml             # Render deployment config
+└── cache/                  # Next.js telemetry config
 ```
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT
